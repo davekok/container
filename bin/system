@@ -1,0 +1,10 @@
+#!/usr/local/bin/php
+<?php
+
+for (
+    $_pkgdir = dirname($_composer_autoload_path ?? __FILE__);
+    strlen($_pkgdir) > 1 && file_exists("$_pkgdir/composer.json") === false;
+    $_pkgdir = dirname($_pkgdir)
+);
+include $_composer_autoload_path ?? "$_pkgdir/vendor/autoload.php";
+(new davekok\system\System($_pkgdir))->boot($argv)->run();

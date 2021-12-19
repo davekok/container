@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace davekok\container;
+namespace davekok\system;
 
 /**
  * Interface for runnable objects.
