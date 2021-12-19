@@ -12,37 +12,36 @@ use Throwable;
  */
 class System
 {
+    private readonly Component $component;
     private readonly Wirings $wirings;
 
-    public function __construct(private readonly string $pkgdir) {}
+    public function __construct(string $prjdir)
+    {
+        $this->component = new Component("main", $prjdir);
+    }
 
     public function boot(array $args): Runnable
     {
         try {
-            $this->wirings = (new WiringsFactory($this->pkgdir))->createWirings();
-
+            $this->wirings = (new WiringsFactory($this->component))->createWirings();
             $this->scanArgs($args);
-
-            if (file_exists("$this->pkgdir/config.json")) {
-                $this->scanConfig(json_decode(
-                    json:        file_get_contents("$this->pkgdir/config.json") ?: throw new Exception("Unable to load file config.json"),
-                    associative: true,
-                    flags:       JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE,
-                ));
-            }
-
-            $runnable = null;
-            foreach ($this->wirings->getAll() as $wiring) {
-                $value = $wiring->wire($this->wirings);
-                if ($value instanceof Runnable) {
-                    $runnable = $value;
-                }
-            }
-            $runnable instanceof Runnable ?: throw new Exception("Nothing to run.");
+            $this->scanConfig($this->component->loadConfig());
+            return $this->wire();
         } catch (Throwable $e) {
-            (new Printer)->printThrowable($e);
+            $this->printThrowable($e);
         }
-        return $runnable;
+    }
+
+    private function wire(): Runnable
+    {
+        $runnable = null;
+        foreach ($this->wirings->getAll() as $wiring) {
+            $value = $wiring->wire($this->wirings);
+            if ($value instanceof Runnable) {
+                $runnable = $value;
+            }
+        }
+        return $runnable ?? throw new Exception("Nothing to run.");
     }
 
     private function scanConfig(array $config, string $prefix = ""): void
@@ -64,7 +63,7 @@ class System
         }
 
         if ($args[0] === "--help") {
-            (new Printer)->printHelp($this->wirings->infoParameters());
+            $this->printHelp();
         }
 
         for ($i = 0; $i < $count; ++$i) {
@@ -90,6 +89,39 @@ class System
                 filter_var($value, FILTER_VALIDATE_FLOAT) !== false   => (float)$value,
                 default                                               => $value,
             });
+        }
+    }
+
+    public function printHelp(): never
+    {
+        $info = $this->component->getInfo();
+        echo $info["name"] . "\n";
+        if (isset($info["description"])) {
+            echo $info["description"] . "\n";
+        }
+        echo "\n";
+
+        echo "List of available parameters:\n";
+        $this->printParameters($this->wirings->infoParameters());
+        exit();
+    }
+
+    public function printThrowable(Throwable $throwable): never
+    {
+        exit("{$throwable->getMessage()}\n"
+            . "## {$throwable->getFile()}({$throwable->getLine()}): " . get_class($throwable) . "\n"
+            . $throwable->getTraceAsString()
+            . "\n");
+    }
+
+    private function printParameters(array $parameters, string $prefix = ""): void
+    {
+        foreach ($parameters as $key => $value) {
+            if (is_array($value)) {
+                $this->printParameters($parameters, "$prefix$key.");
+                continue;
+            }
+            echo "--$prefix$key\n    $value\n";
         }
     }
 }
