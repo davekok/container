@@ -9,8 +9,15 @@ use Throwable;
 
 class TopologicalSorter
 {
-    private array $nodes        = [];
-    private array $dependencies = [];
+    /**
+     * Map of nodes.
+     */
+    private array /* {[key: string|int]: mixed;}  */ $nodes = [];
+
+    /**
+     * Two-dimensional array, column one is the key of node, column two is the key of the node on which it depends.
+     */
+    private array /* [string|int, string|int][] */ $dependencies = [];
 
     /**
      * Add a node.
@@ -30,12 +37,16 @@ class TopologicalSorter
 
     /**
      * Return the nodes in sorted order.
+     *
+     * Order is nodes without dependencies first (trunk), nodes on which nothing depends last (leafs).
+     *
+     * Declared dependencies that are not in the node map are removed.
      */
     public function sort(): array
     {
         $sorted = [];
 
-        // Remove dependencies without nodes
+        // Remove dependencies without corresponding entry in node map.
         foreach ($this->dependencies as $ix => [$node, $dependency]) {
             if (isset($this->nodes[$node]) === false || isset($this->nodes[$dependency]) === false) {
                 unset($this->dependencies[$ix]);
@@ -47,7 +58,9 @@ class TopologicalSorter
             // Extract the node column from two-dimensional dependencies array.
             $nodeColumn = array_column($this->dependencies, 0);
 
+            // Remember count so we can check progress is made later on.
             $count = count($this->nodes);
+
             // Add nodes to sorted that are no longer in nodeColumn.
             foreach ($this->nodes as $key => $value) {
                 if (in_array($key, $nodeColumn) === false) {
@@ -56,13 +69,16 @@ class TopologicalSorter
                 }
             }
 
-            // Make sure at least something has been removed.
+            // Make sure at least something has been removed and thus there is progress.
             if ($count === count($this->nodes)) throw new Exception("Sort failed");
 
-
-            // If dependencies are empty just continue adding nodes.
+            // Remember count so we can check progress is made later on.
             $count = count($this->dependencies);
-            if ($count === 0) continue;
+
+            // However, if there are no more dependencies just add remaining node and return.
+            if ($count === 0) {
+                return [...$sorted, ...$this->nodes];
+            }
 
             // Remove dependencies of which the dependency is no longer in the nodeColumn.
             foreach ($this->dependencies as $ix => [$node, $dependency]) {

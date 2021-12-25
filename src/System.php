@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace davekok\system;
 
-use Exception;
 use Throwable;
 
 /**
  * Class to bring the system online.
+ *
+ * See also the system script in bin.
  */
 class System
 {
     private readonly Component $component;
     private readonly Wirings $wirings;
 
-    public function __construct(string $prjdir)
-    {
-        $this->component = new Component("main", $prjdir);
-    }
+    public function __construct(private readonly string $prjdir) {}
 
     public function boot(array $args): Runnable
     {
         try {
-            $this->wirings = (new WiringsFactory($this->component))->createWirings();
+            $this->component = new Component("main", $this->prjdir);
+            $this->wirings   = (new WiringsFactory($this->component))->createWirings();
             $this->scanArgs($args);
             $this->scanConfig($this->component->loadConfig());
+            $this->prewire();
             return $this->wire();
         } catch (Throwable $e) {
             $this->printThrowable($e);
@@ -41,7 +41,14 @@ class System
                 $runnable = $value;
             }
         }
-        return $runnable ?? throw new Exception("Nothing to run.");
+        return $runnable ?? throw new WiringException("Nothing to run.");
+    }
+
+    private function prewire(): void
+    {
+        foreach ($this->wirings->getAll() as $wiring) {
+            $wiring->prewire($this->wirings);
+        }
     }
 
     private function scanConfig(array $config, string $prefix = ""): void

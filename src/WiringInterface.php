@@ -25,7 +25,19 @@ interface WiringInterface
     public function getParameter(string $key): string|int|float|bool|null;
 
     /**
-     * Wire components.
+     * Configure wire services.
+     *
+     * The wirings argument gives access to wirings of other components.
+     */
+    public function prewire(Wirings $wirings): void;
+
+    /**
+     * Get a wire service provided by the component.
+     */
+    public function wireService(string $key): object;
+
+    /**
+     * Wire component.
      *
      * The wirings argument gives access to wirings of other components.
      *

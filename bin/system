@@ -2,9 +2,9 @@
 <?php
 
 for (
-    $_pkgdir = dirname($_composer_autoload_path ?? __FILE__);
-    strlen($_pkgdir) > 1 && file_exists("$_pkgdir/composer.json") === false;
-    $_pkgdir = dirname($_pkgdir)
+    $_prjdir = dirname($_composer_autoload_path ?? __FILE__);
+    strlen($_prjdir) > 1 && file_exists("$_prjdir/composer.json") === false;
+    $_prjdir = dirname($_prjdir)
 );
-include $_composer_autoload_path ?? "$_pkgdir/vendor/autoload.php";
-(new davekok\system\System($_pkgdir))->boot($argv)->run();
+include $_composer_autoload_path ?? "$_prjdir/vendor/autoload.php";
+(new davekok\system\System($_prjdir))->boot($argv)->run();

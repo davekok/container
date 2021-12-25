@@ -59,10 +59,12 @@ class Component
 
     private function loadJson(string $file): array
     {
-        return file_exists($file) ? json_decode(
-            json:        file_get_contents($file) ?: throw new Exception("Unable to read file: {$file}"),
-            associative: true,
-            flags:       JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE,
-        ) : [];
+        return file_exists($file)
+            ? json_decode(
+                json:        file_get_contents($file) ?: throw new Exception("Unable to read file: {$file}"),
+                associative: true,
+                flags:       JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE,
+            )
+            : [];
     }
 }
