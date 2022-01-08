@@ -1,4 +1,4 @@
-davekok/system
+davekok/wiring
 ================================================================================
 
-A component to configure and wire components and run the system.
+A component to configure and wire components and run a runnable.

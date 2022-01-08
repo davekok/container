@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace davekok\system;
+namespace davekok\wiring;
 
 use Exception;
 use Throwable;
 
-class TopologicalSorter
+class TopologicalDependencySorter
 {
     /**
      * Map of nodes.
@@ -25,6 +25,14 @@ class TopologicalSorter
     public function addNode(string|int $key, mixed $value): void
     {
         $this->nodes[$key] = $value;
+    }
+
+    /**
+     * Does the node already exists?
+     */
+    public function hasNode(string|int $key): bool
+    {
+        return isset($this->nodes[$key]);
     }
 
     /**
@@ -61,7 +69,7 @@ class TopologicalSorter
             // Remember count so we can check progress is made later on.
             $count = count($this->nodes);
 
-            // Add nodes to sorted that are no longer in nodeColumn.
+            // Add nodes to sorted that are no longer in node column.
             foreach ($this->nodes as $key => $value) {
                 if (in_array($key, $nodeColumn) === false) {
                     $sorted[$key] = $value;
@@ -80,7 +88,7 @@ class TopologicalSorter
                 return [...$sorted, ...$this->nodes];
             }
 
-            // Remove dependencies of which the dependency is no longer in the nodeColumn.
+            // Remove dependencies of which the dependency is no longer in the node column.
             foreach ($this->dependencies as $ix => [$node, $dependency]) {
                 if (in_array($dependency, $nodeColumn) === false) {
                     unset($this->dependencies[$ix]);

@@ -4,52 +4,78 @@ declare(strict_types=1);
 
 // namespace ;
 
-use davekok\system\NoSuchParameterWiringException;
-use davekok\system\NoSuchServiceWiringException;
-use davekok\system\NoSuchSetupServiceWiringException;
-use davekok\system\Runnable;
-use davekok\system\WiringInterface;
-use davekok\system\Wirings;
+use davekok\wiring\NoSuchParameterWiringException;
+use davekok\wiring\NoSuchRunnableWiringException;
+use davekok\wiring\NoSuchWireableWiringException;
+use davekok\wiring\NoSuchServiceWiringException;
+use davekok\wiring\Runnable;
+use davekok\wiring\Wiring;
+use davekok\wiring\Wirings;
 
 /**
  * A template to quickly write your own wiring.
  */
-class Wiring implements WiringInterface
+class MyWiring implements Wiring
 {
+    private readonly Wirings $wirings;
+
+    public function setWirings(Wirings $wirings): void
+    {
+        $this->wirings = $wirings;
+    }
+
     public function infoParameters(): array
     {
         return [
         ];
     }
 
-    public function setParameter(string $key, string|int|float|bool|null $value): void
+    public function setParameter(string $key, array|string|int|float|bool|null $value): void
     {
         match ($key) {
             default => throw new NoSuchParameterWiringException($key),
         };
     }
 
-    public function getParameter(string $key): string|int|float|bool|null
+    public function getParameter(string $key): array|string|int|float|bool|null
     {
         return match ($key) {
             default => throw new NoSuchParameterWiringException($key),
         };
     }
 
-    public function setup(Wirings $wirings): void
+    public function listRunnables(): array
     {
+        return [];
     }
 
-    public function setupService(string $key): object
+    public function helpRunnable(string $key): string
     {
         return match ($key) {
-            default => throw new NoSuchSetupServiceWiringException($key),
+            default => throw new NoSuchRunnableWiringException();
         };
     }
 
-    public function wire(Wirings $wirings): Runnable|null
+    public function runnable(string $key, array $args): Runnable
     {
-        return null;
+        return match ($key) {
+            default => throw new NoSuchRunnableWiringException();
+        };
+    }
+
+    public function prewire(): void
+    {
+    }
+
+    public function wireable(string $key): Wireable
+    {
+        return match ($key) {
+            default => throw new NoSuchWireableWiringException($key),
+        };
+    }
+
+    public function wire(): void
+    {
     }
 
     public function service(string $key): object

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace davekok\system;
+namespace davekok\wiring;
 
 /**
  * Interface for runnable objects.

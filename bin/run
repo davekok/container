@@ -1,0 +1,13 @@
+#!/usr/local/bin/php
+<?php
+
+for (
+    $_wiring_rootdir = dirname(realpath("$_composer_autoload_path") ?? __FILE__);
+    strlen($_wiring_rootdir) > 1 && is_dir("$_wiring_rootdir/vendor") === false;
+    $_wiring_rootdir = dirname($_wiring_rootdir)
+);
+if (is_dir("$_wiring_rootdir/vendor") === false) {
+    exit("vendor folder not found.");
+}
+include $_composer_autoload_path ?? "$_wiring_rootdir/vendor/autoload.php";
+(new davekok\wiring\Wirerer($_wiring_rootdir, array_slice($argv, 1)))->wire()->run();

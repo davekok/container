@@ -2,9 +2,15 @@
 
 declare(strict_types=1);
 
-namespace davekok\system;
+namespace davekok\wiring;
 
+/**
+ * Base interface of wireables.
+ */
 interface Wireable
 {
-    public function wire(Wirings $wirings): mixed;
+    /**
+     * Wire the wireable. Depending on context may return something or nothing.
+     */
+    public function wire();
 }

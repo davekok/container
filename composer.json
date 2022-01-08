@@ -1,6 +1,6 @@
 {
-    "name": "davekok/system",
-    "description": "Configure and wire components and run the system.",
+    "name": "davekok/wiring",
+    "description": "Configure and wire components and run a runnable.",
     "type": "library",
     "license": "UNLICENSE",
     "authors": [
@@ -11,8 +11,8 @@
     ],
     "autoload": {
         "psr-4": {
-            "davekok\\system\\": "src/",
-            "davekok\\system\\tests\\": "tests/"
+            "davekok\\wiring\\": "src/",
+            "davekok\\wiring\\tests\\": "tests/"
         }
     },
     "require-dev": {
@@ -20,6 +20,6 @@
         "phpunit/php-code-coverage": "^9.2.x-dev"
     },
     "bin": [
-        "bin/system"
+        "bin/run"
     ]
 }

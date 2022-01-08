@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace davekok\system\tests;
+namespace davekok\wiring\tests;
 
-use davekok\system\TopologicalSorter;
+use davekok\wiring\TopologicalDependencySorter;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass \davekok\system\TopologicalSorter
+ * @coversDefaultClass \davekok\system\TopologicalDependencySorter
  * @covers ::addNode
  * @covers ::addDependency
  * @covers ::sort
  */
-class TopologicalSorterTest extends TestCase
+class TopologicalDependencySorterTest extends TestCase
 {
     public function testTopsort(): void
     {
-        $sorter = new TopologicalSorter;
+        $sorter = new TopologicalDependencySorter;
         $sorter->addNode("d", "4");
         $sorter->addNode("c", "3");
         $sorter->addNode("b", "2");
@@ -38,7 +38,7 @@ class TopologicalSorterTest extends TestCase
 
     public function testTopsort2(): void
     {
-        $sorter = new TopologicalSorter;
+        $sorter = new TopologicalDependencySorter;
         $sorter->addNode("d", "4");
         $sorter->addNode("c", "3");
         $sorter->addNode("b", "2");
@@ -59,7 +59,7 @@ class TopologicalSorterTest extends TestCase
 
     public function testTopsort3(): void
     {
-        $sorter = new TopologicalSorter;
+        $sorter = new TopologicalDependencySorter;
         $sorter->addNode("d", "4");
         $sorter->addNode("c", "3");
         $sorter->addNode("b", "2");

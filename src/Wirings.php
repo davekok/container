@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace davekok\system;
+namespace davekok\wiring;
 
 use Exception;
 use Throwable;
@@ -11,14 +11,20 @@ class Wirings
 {
     public function __construct(
         private readonly array $wirings = [],
-    ) {}
-
-    public function get(string $key): Wiring
-    {
-        return $this->wirings[$key] ?? throw new WiringException("Not found: $key");
+    ) {
+        foreach ($this->wirings as $components) {
+            foreach ($components as $wiring) {
+                $wiring->setWirings($this);
+            }
+        }
     }
 
-    public function getAll(): array
+    public function get(string $vendor, string $component): Wiring
+    {
+        return $this->wirings[$vendor][$component] ?? throw new WiringException("Not found: $vendor/$component");
+    }
+
+    public function all(): array
     {
         return $this->wirings;
     }
@@ -26,33 +32,42 @@ class Wirings
     public function infoParameters(): array
     {
         $info = [];
-        foreach ($wirings as $key => $wiring) {
-            $info[$key] = $wiring->infoParameters();
+        foreach ($this->wirings as $vendor => $components) {
+            foreach ($components as $component => $wiring) {
+                $info[$vendor][$component] = $wiring->infoParameters();
+            }
         }
         return $info;
     }
 
-    public function setParameter(string $key, string|int|float|bool $value): self
+    public function setParameter(string $vendor, string $component, string $parameter, string|int|float|bool|array|null $value): self
     {
-        try {
-            $this->findWiringByKey($key, $subkey)->set($subkey, $value);
-            return $this;
-        } catch (Throwable $throwable) {
-            $this->printError($throwable);
-        }
+        $this->get($vendor, $component)->setParameter($parameter, $value);
+        return $this;
     }
 
-    public function getParameter(string $key): string|int|float|bool
+    public function getParameter(string $vendor, string $component, string $parameter): string|int|float|bool|array|null
     {
-        return $this->findWiringByKey($key, $subkey)->get($subkey);
+        return $this->get($vendor, $component)->getParameter($parameter);
     }
 
-    private function findWiringByKey(string $key, string &$subkey): Wiring
+    public function wireable(string $vendor, string $component, string $wireable): object
     {
-        $mainkey = strtok($key, ".");
-        strlen($mainkey) === strlen($key) ?: throw new WiringException("Invalid key: $key");
-        $wiring = $this->wirings[$mainkey] ?? throw new WiringException("Not found: $mainkey");
-        $subkey = substr($key, 1 + strlen($mainkey));
-        return $wiring;
+        return $this->get($vendor, $component)->wireable($wireable);
+    }
+
+    public function service(string $vendor, string $component, string $service): object
+    {
+        return $this->get($vendor, $component)->service($service);
+    }
+
+    public function helpRunnable(string $vendor, string $component, string $runnable): string
+    {
+        return $this->get($vendor, $component)->helpRunnable($runnable);
+    }
+
+    public function runnable(string $vendor, string $component, string $runnable, array $args): Runnable
+    {
+        return $this->get($vendor, $component)->runnable($runnable, $args);
     }
 }

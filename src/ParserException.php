@@ -6,4 +6,6 @@ namespace davekok\wiring;
 
 use Exception;
 
-class WiringException extends Exception {}
+class ParserException extends Exception
+{
+}
