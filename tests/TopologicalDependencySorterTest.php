@@ -8,8 +8,9 @@ use davekok\wiring\TopologicalDependencySorter;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass \davekok\system\TopologicalDependencySorter
+ * @coversDefaultClass \davekok\wiring\TopologicalDependencySorter
  * @covers ::addNode
+ * @covers ::hasNode
  * @covers ::addDependency
  * @covers ::sort
  */
@@ -25,6 +26,8 @@ class TopologicalDependencySorterTest extends TestCase
         $sorter->addDependency("b", "a");
         $sorter->addDependency("c", "b");
         $sorter->addDependency("d", "c");
+        static::assertTrue($sorter->hasNode("a"));
+        static::assertFalse($sorter->hasNode("z"));
         static::assertSame(
             [
                 "a" => "1",

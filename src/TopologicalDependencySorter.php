@@ -99,6 +99,9 @@ class TopologicalDependencySorter
             if ($count === count($this->dependencies)) throw new Exception("Sort failed");
         }
 
+        $this->nodes = [];
+        $this->dependencies = [];
+
         return $sorted;
     }
 }
