@@ -2,10 +2,8 @@ FROM composer AS composer
 COPY composer.* /app
 RUN composer install --ignore-platform-reqs
 
-FROM php:8.1.1
-RUN pecl install pcov && docker-php-ext-enable pcov
+FROM davekok/wiring:base-dev
 COPY --from=composer /app/vendor /app/vendor
-COPY bin /app/bin
+COPY run /app/vendor/bin/run
 COPY src /app/src
 COPY tests /app/tests
-WORKDIR /app

@@ -5,7 +5,14 @@ IFS=$'\n\t'
 
 CONTAINER_REGISTRY="ghcr.io"
 SELF="$(readlink -f "$0")"
-DIR="$(dirname "$SELF")"
+if [ "$SELF" == */vendor/*/wiring/ops ]; then
+    SELFDIR="$(dirname "$SELF")"
+    DIR="$(dirname "$(dirname "$(dirname "$SELFDIR")")")"
+else
+    SELFDIR="$(dirname "$SELF")"
+    DIR="$SELFDIR"
+fi
+BASE="$(dirname "$(dirname "$DIR")")"
 ACCOUNT="$(basename "$(dirname "$DIR")")"
 PROJECT="$(basename "$DIR")"
 ID="$CONTAINER_REGISTRY/$ACCOUNT/$PROJECT"
@@ -32,6 +39,12 @@ function volumes() {
                 VOLUMES+=("-v" "./docs/coverage:/app/docs/coverage:rw")
                 ;;
             dependencies)
+                for DEPENDENCY in `sed -n '/"require": {/,/}/p' composer.json | grep '^ *"[a-z-]*/[a-z-]*":' | grep -o '[a-z-]*/[a-z-]*'`
+                do
+                    if [ -d "$BASE/$DEPENDENCY/src" ]; then
+                        VOLUMES+=("-v" "$BASE/$DEPENDENCY/src:/app/vendor/$DEPENDENCY/src:ro")
+                    fi
+                done
                 ;;
         esac
     done
@@ -43,7 +56,8 @@ case "${1:-}" in
         ;;
 
     build)
-        if [ ! -f "composer.lock" ]; then
+        if [ ! -f "composer.lock" ]
+        then
             exec "$SELF" update
         fi
 
@@ -51,20 +65,25 @@ case "${1:-}" in
             dev)
                 buildah bud -t "$ID:dev" "dev.containerfile"
                 ;;
+
             *)
-                buildah bud -t "$ID:${2}" "release.containerfile"
+                buildah bud -t "$ID:${2:-latest}" "release.containerfile"
                 ;;
         esac
         ;;
 
-    tag)
-        shift
-        if [ "${1:-}" == "" ]; then
-            echo "error: tag missing"
-            echo "usage: ops tag TAG [NEWTAG]"
-            exit
-        fi
-        buildah tag "$ID:$1" "$ID:${2:-latest}"
+    base)
+        case "${2:-}" in
+            build)
+                buildah bud -t "$ID:base-dev" "$SELFDIR/base-dev.containerfile"
+                buildah bud -t "$ID:base-release" "$SELFDIR/base-release.containerfile"
+                ;;
+
+            publish)
+                podman push "$ID:base-dev"
+                podman push "$ID:base-release"
+                ;;
+        esac
         ;;
 
     update | require)
@@ -81,25 +100,33 @@ case "${1:-}" in
     test)
         volumes src test phpunit coverage dependencies
         shift
-        podman run -it --rm -w /app "${VOLUMES[@]}" "$ID:dev" \
+        podman run -it --rm "${VOLUMES[@]}" "$ID:dev" \
             php /app/vendor/bin/phpunit --coverage-html /app/docs/coverage /app/tests $*
         ;;
 
     check)
         volumes src test
-        podman run -it --rm -w /app "${VOLUMES[@]}" "$ID:dev" \
+        podman run -it --rm "${VOLUMES[@]}" "$ID:dev" \
             find src tests -name "*.php" -type f -exec php -l "{}" \;
         ;;
 
     bash)
-        if [ "${2:-}" == "dev" ]; then
-            volumes src test dependencies
+        volumes src test
+        podman run -it --rm "${VOLUMES[@]}" "$ID:${2:-dev}" bash
+        ;;
+
+    run-*)
+        TAG="${1:4}"
+        if [ "$TAG" == "dev" ]; then
+            volumes src dependencies
         fi
-        podman run -it --rm -w /app "${VOLUMES[@]}" "$ID:${2:-dev}" bash
+        shift
+        podman run -it --rm "${VOLUMES[@]}" "$ID:$TAG" $*
         ;;
 
     run)
-        echo "This is a library and can't be run."
+        shift
+        podman run -it --rm "$ID:latest" $*
         ;;
 
     status | add | commit | pull | push | stash | diff)
